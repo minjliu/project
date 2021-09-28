@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<script src="js/jquery-3.5.1.min.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+	<style type="text/css">
+		body {
+		    margin: 0;
+		    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+		    font-size: 1rem;
+		    font-weight: 400;
+		    line-height: 1.5;
+		    text-align: left;
+		    background-color: #eee;
+		}
+		ul li{list-style: none;}
+		.container{height: 100%;width: 1024px;margin: auto;}
+		.container>div{padding: 10px;border: 1px solid #eee;box-shadow: 1px 1px 3px rgba(0,0,0,0.5);margin-top: 20px;background-color: #fff;}
+		.container>div:nth-child(1)>ul{width: 500px;}
+		.container>div:nth-child(1)>ul>li>label{display: inline-block;width: 170px;text-align: right;}
+		.container>div:nth-child(1)>ul>li>select{width: 180px;}
+		.container>div:nth-child(1)>ul>li:nth-child(1)>input{width: 80px;}
+		.container>div:nth-child(1)>ul>li:nth-child(4)>input{width: 57px;}
+		.container>div:nth-child(1)>ul>li:nth-child(4)>label:nth-child(3){width: 40px;}
+		.container>div:nth-child(1)>ul>li:nth-child(5){text-align: right;}
+		.container>div:nth-child(1)>ul>li:nth-child(5)>button{padding: 5px 10px;}
+		
+		.container>div:nth-child(2)>table{width: 100%;}
+		.container>div:nth-child(2)>table>thead>tr>th,.container>div:nth-child(2)>table>tfoot>tr>th,.container>div:nth-child(2)>table>tbody>tr>td{text-align: right;}
+		.container>div:nth-child(2)>table>thead>tr>th:nth-child(1),.container>div:nth-child(2)>table>tfoot>tr>th:nth-child(1),.container>div:nth-child(2)>table>tbody>tr>td:nth-child(1){text-align: left;}
+	</style>
+	<body>
+		<div class="container">
+			<div>
+				<ul>
+					<li><label>Product Name:</label>
+						<input type="text" id="name" value="" />
+					</li>
+					<li><label>Commodity category:</label>
+						<select id="category">
+							<option value=""></option>
+							<option value="1">books</option>
+							<option value="2">food</option>
+							<option value="3">Duty free medical products</option>
+							<option value="4">other</option>
+						</select>
+					</li>
+					<li>
+						<label>Commodity state:</label>
+						<select id="state">
+							<option value=""></option>
+							<option value="1">Import</option>
+							<option value="2">Non import</option>
+						</select>
+					</li>
+					<li>
+						<label>Price:</label>
+						<input type="number" id="price" value="1" />
+						<label>Quantity:</label>
+						<input type="number" id="quantity" value="1" />
+					</li>
+					<li>
+						<button id="confirm">confirm</button>
+					</li>
+				</ul>
+			</div>
+			<div>
+				<table>
+					<thead>
+						<tr>
+							<th>品名</th>
+							<th>单价</th>
+							<th>数量</th>
+							<th>性质</th>
+							<th>税率</th>
+							<th>销售税</th>
+							<th>销售税总额</th>
+							<th>总成本</th>
+						</tr>
+					</thead>
+					<tbody id="t">
+					</tbody>
+					<tfoot>
+						<tr>
+							<th>合计</th>
+							<th colspan="5"></th>
+							<th id="salesTaxes"></th>
+							<th id="total"></th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript">
+		var categoryRate = {'1':0,'2':0,'3':0,'4':0.1,};//商品类别对应税率
+		var ImportTaxRate = {'1':0.05,'2':0};//进口税
+		$(document).ready(function(){
+			statistics();
+		})
+		function statistics(){
+			$("#confirm").click(function(){
+				//获取输入值
+				var name = $("#name").val();
+				var category = $("#category").val();
+				var state = $("#state").val();
+				var price = $("#price").val();
+				var quantity = $("#quantity").val();
+				
+				var errTxt = "";
+				if(name.length == 0){
+					errTxt = "请输入商品名称！";
+				}
+				if(category.length == 0){
+					errTxt += "\n请选择商品种类！";
+				}
+				if(state.length == 0){
+					errTxt += "\n请选择商品性质！";
+				}
+				if(price.length == 0){
+					errTxt += "\请输入商品单价！";
+				}
+				if(quantity.length == 0){
+					errTxt += "\请输入商品数量！";
+				}
+				
+				if(errTxt.length > 0){
+					alert(errTxt);
+				}else{
+					//计算销售税
+					var salesTax = price*(categoryRate[category] + ImportTaxRate[state]);
+					salesTax = Math.ceil(salesTax/0.05)*0.05;
+					salesTax = salesTax.toFixed(2);
+					var cost = parseFloat(salesTax)+parseFloat(price);
+					//页面渲染
+					var tempHtml = "<tr>"+
+									"<td>"+name+"</td>"+
+									"<td>"+price+"</td>"+
+									"<td>"+quantity+"</td>"+
+									"<td>"+(state==1?'进口':'')+"</td>"+
+									"<td>"+(categoryRate[category] + ImportTaxRate[state]).toFixed(2)+"</td>"+
+									"<td>"+salesTax+"</td>"+
+									"<td class='s'>"+(quantity*salesTax).toFixed(2)+"</td>"+
+									"<td class='c'>"+(quantity*cost).toFixed(2)+"</td>"+
+								"</tr>";
+					$("#t").append(tempHtml);
+					totalCalculation();//计算总数
+				}
+				
+			})
+		}
+		function totalCalculation(){
+			var salesTaxes = 0;
+			var total = 0;
+			$.each($(".s"),function(k,v){
+				salesTaxes += parseFloat($(v).text());
+			})
+			$.each($(".c"),function(k,v){
+				total += parseFloat($(v).text());
+			})
+			
+			$("#salesTaxes").text(salesTaxes.toFixed(2));
+			$("#total").text(total.toFixed(2));
+		}
+	</script>
+</html>
